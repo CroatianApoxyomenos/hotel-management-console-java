@@ -5,9 +5,7 @@ import Domain.RoomProfitabilityDTO;
 import Domain.RoomTypesDTO;
 import Repository.RoomRepository;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class RoomService {
@@ -64,32 +62,24 @@ public class RoomService {
     }
 
     public List<RoomTypesDTO> getAverageBedsByRoomType() {
-        int averageRegular = 0, averageBusiness = 0, averageExecutive = 0, averageVIP = 0;
-        int numRegular = 0, numBusiness = 0, numExecutive = 0, numVIP = 0;
-        List<Room> allRooms = this.getAll();
-        List<RoomTypesDTO> result = new ArrayList<>();
-        for (Room room : allRooms) {
-            if (room.getType().equals("Regular")) {
-                numRegular += 1;
-                averageRegular += room.getBeds();
+        Map<String, List<Integer>> typesWithBeds = new HashMap<>();
+        for (Room r : this.getAll()) {
+            String type = r.getType();
+            int beds = r.getBeds();
+            if (!typesWithBeds.containsKey(type)) {
+                typesWithBeds.put(type, new ArrayList<>());
             }
-            if (room.getType().equals("Business")) {
-                numBusiness += 1;
-                averageBusiness += room.getBeds();
-            }
-            if (room.getType().equals("Executive")) {
-                numExecutive += 1;
-                averageExecutive += room.getBeds();
-            }
-            if (room.getType().equals("VIP")) {
-                numVIP += 1;
-                averageVIP += room.getBeds();
-            }
+            typesWithBeds.get(type).add(beds);
         }
-        result.add(new RoomTypesDTO("Regular", (float) averageRegular / numRegular, numRegular, averageRegular));
-        result.add(new RoomTypesDTO("Business", (float) averageBusiness / numBusiness, numBusiness, averageBusiness));
-        result.add(new RoomTypesDTO("Executive", (float) averageExecutive / numExecutive, numExecutive, averageExecutive));
-        result.add(new RoomTypesDTO("VIP", (float) averageVIP / numVIP, numVIP, averageVIP));
+        List<RoomTypesDTO> result = new ArrayList<>();
+        for (String type : typesWithBeds.keySet()) {
+            float average = 0;
+            for (float beds : typesWithBeds.get(type)) {
+                average += beds;
+            }
+            average /= typesWithBeds.get(type).size();
+            result.add(new RoomTypesDTO(type, average));
+        }
         return result;
     }
 
